@@ -1,0 +1,5 @@
+./.mypy_chache/
+*__pycache__/
+env
+src/data/*.*
+*/*.egg-info

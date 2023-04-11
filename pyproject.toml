@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=67.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[project]
+name = "DnD"
+version = "0.0.1"
+authors = [
+    { name = "CegRay"},
+]
+description = "Parser for DnD guides and Convertor to .md files for Obsidian"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "aiohttp==3.8.*",
+    "beautifulsoup4==4.12.*",
+    "Celery==5.2.*",
+    "redis==4.5.*"
+]
+[project.optional-dependencies]
+dev = [
+    "free-proxy==1.1.1"
+]
+test = [
+    "pytest",
+    "pytest-asyncio"
+]
+lint = [
+    "flake8",
+    "flake8-blind-except",
+    "flake8-bugbear",
+    "flake8-builtins",
+    "flake8-cognitive-complexity",
+    "flake8-commas",
+    "flake8-comprehensions",
+    "flake8-docstrings",
+    "flake8-eradicate",
+    "flake8-import-order",
+    "flake8-mutable",
+    "flake8-polyfill",
+    "flake8-print"
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/CegRay/DnD"
+"Bug Tracker" = "https://github.com/CegRay/DnD/issues"
+
+[project.scripts]
+run = "DnD.cli:cli"
+dev = "DnD.cli:dev"
