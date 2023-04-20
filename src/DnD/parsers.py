@@ -1,29 +1,32 @@
+import asyncio
 import json
 import logging
+import os
 import re
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import aiohttp
 from bs4 import BeautifulSoup
-from celery import Celery
-from DnD import celeryconfig
 from DnD.config import Config
-from fp.fp import FreeProxy
+from DnD.consts import SPELL_HTML_CONST
 
 
 class BaseParser():
     def __init__(self, config: Config) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.main_page_url = ""
-        # self.proxy = FreeProxy(timeout=1, https=True).get(
-        #     repeat=True) if config.proxy else None
         self.aiohttp_session = aiohttp.ClientSession(headers=config.headers)
-        self.celery_app = Celery(self.__class__.__name__)
+        self.max_concurence = config.max_concurence
+        self.base_path = os.path.join(os.getcwd(), config.base_path)
+        if config.proxy:
+            from fp.fp import FreeProxy
+            self.proxy = FreeProxy(timeout=1, https=True).get(
+                repeat=True)
 
-    async def get_main_page_html(self) -> Optional[str]:
+    async def get_page_html(self, page_url: str) -> Optional[str]:
         try:
             async with self.aiohttp_session.get(
-                    self.main_page_url,
+                    url=page_url,
                     proxy=self.proxy,
                     allow_redirects=False) as response:
 
@@ -32,17 +35,19 @@ class BaseParser():
                 return None
 
         except aiohttp.ClientError as ex:
-            self.logger.error(f"MAIN page request: {ex}")
+            self.logger.error(f"Page request {page_url}:\n {ex}")
             return None
 
 
 class SpellsParser(BaseParser):
     def __init__(self, config: Config) -> None:
         super().__init__(config)
-        self.main_page_url = "https://dnd.su/spells/"
+        self.base_path = os.path.join(self.base_path, "spells", "add_data")
 
-    async def get_main_page_info(self, html: str) -> Dict[str, str]:
+    async def scrap_main_page_info(self, html: str) -> Dict[str, str]:
         soup = BeautifulSoup(html, "lxml")
+
+        # Find and format spells filter info
         script_tag_text = soup.find(
             "script", string=re.compile("window.LIST")).get_text()
         formatted_script_text = script_tag_text.replace(
@@ -51,13 +56,55 @@ class SpellsParser(BaseParser):
 
         return json_data
 
-    async def get_detailed_info(self, data: Dict[str, str]) -> None:
-        self.celery_app.config_from_object(celeryconfig)
-        print(
-            self.celery_app.task(self.get_detailed_info, data=data))
+    async def get_spell_info(self, card: Dict[str, Union[str, List[Union[int, str]]]]) -> Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]:
 
+        card_link = "https://dnd.su" + str(card["link"].replace("\\", ""))
+        card_html = await self.get_page_html(page_url=card_link)
 
-class ItemsParser(BaseParser):
-    def __init__(self, config: Config) -> None:
-        super().__init__(config)
-        self.main_page_url = "https://dnd.su/items/"
+        if not card_html:
+            self.logger.info(
+                f"Can't scrap spell - {card_link}")
+            return (card, SPELL_HTML_CONST)
+
+        return (card, card_html)
+
+    async def get_spells_info(self,
+                              data: Dict[str, str]) -> \
+            List[Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]]:
+
+        semaphore = asyncio.Semaphore(self.max_concurence)
+        tasks = asyncio.Queue()
+        combined_data_list = []
+
+        for card in data["cards"]:
+            await tasks.put(card)
+
+        # Create worker for parsing detailed info
+        async def fetch_worker():
+            while not tasks.empty():
+                card = await tasks.get()
+                async with semaphore:
+                    result = await self.get_spell_info(card)
+                    combined_data_list.append(result)
+
+        # Run some workers
+        workers = [fetch_worker() for _ in range(self.max_concurence)]
+        await asyncio.gather(*workers)
+
+        return combined_data_list
+
+    async def save_json_html_data(
+            self,
+            combined_data_list: List[
+                Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]]):
+
+        os.makedirs(self.base_path, exist_ok=True)
+
+        for i, spell in enumerate(combined_data_list):
+            spell_path = os.path.join(self.base_path, str(i))
+
+            with open(f"{spell_path}.json", 'w') as file:
+                json.dump(spell[0], file, indent=4)
+
+            with open(f"{spell_path}.html", "wb") as file:
+                file.write(spell[1])

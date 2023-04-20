@@ -2,27 +2,32 @@ import asyncio
 import logging
 import time
 
-from celery import Celery
 from DnD.config import Config, load_config
-from DnD.parsers import ItemsParser, SpellsParser
+from DnD.formatters import SpellsFormatter
+from DnD.parsers import SpellsParser
+
 
 logger = logging.getLogger("main")
 
 
 async def scrap_spells(config: Config, parser: SpellsParser):
-    # html = await parser.get_main_page_html()
-    # if not html:
-    #     await parser.aiohttp_session.close()
-    #     return None
+    html = await parser.get_page_html(page_url="https://dnd.su/spells/")
+    if not html:
+        await parser.aiohttp_session.close()
+        logger.error("Can't scrap spells - no HTML")
+        return None
 
-    # json_data = await parser.get_main_page_info(html)
-    await parser.get_detailed_info({"", ""})
+    json_data = await parser.scrap_main_page_info(html)
+    detailed_data_list = await parser.get_spells_info(json_data)
+
+    await parser.save_json_html_data(detailed_data_list)
     await parser.aiohttp_session.close()
 
-# async def scrap_items(config: Config):
-#     parser = ItemsParser(config)
-#     main_html = await parser.get_main_html()
-#     logger.info(str(main_html))
+    # Format and save md
+    formatter = SpellsFormatter(config.base_path)
+
+    md_data_list = await formatter.create_md_data_list()
+    await formatter.save_to_md(md_data_list, remove_files=False)
 
 
 async def main():
@@ -30,7 +35,7 @@ async def main():
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
-    logger.info("Starting bot")
+    logger.info("Starting crawler")
 
     config = load_config("./config.ini")
 
@@ -48,7 +53,7 @@ def cli():
         logger.info(
             f"Working time: {(end_time - start_time):.5f}")
     except (KeyboardInterrupt, SystemExit):
-        logger.error("Bot stopped!")
+        logger.error("Crawler stopped!")
 
 
 def dev():
@@ -62,4 +67,4 @@ def dev():
         logger.info(
             f"Working time: {(end_time - start_time):.5f}")
     except (KeyboardInterrupt, SystemExit):
-        logger.error("Bot stopped!")
+        logger.error("Crawler stopped!")
