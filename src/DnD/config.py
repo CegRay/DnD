@@ -9,6 +9,7 @@ class Config:
     proxy: bool
     max_concurence: int
     base_path: str
+    is_remove_files: bool
 
 
 def load_config(path: str):
@@ -19,5 +20,7 @@ def load_config(path: str):
         headers={**config["headers"]},
         proxy=config["parser"].getboolean("is_proxy"),
         max_concurence=config["parser"].getint("max-concurence"),
-        base_path=config["parser"].get("base-path"),
+        base_path=config["main"].get("base-path"),
+        is_remove_files=config["formatter"].getboolean(
+            "is_remove_additional_files"),
     )

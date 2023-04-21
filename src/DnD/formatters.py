@@ -12,9 +12,10 @@ import yaml
 
 
 class BaseFormatter():
-    def __init__(self, base_path: str) -> None:
+    def __init__(self, base_path: str, is_remove_data: bool) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.base_path = os.path.join(os.getcwd(), base_path)
+        self.is_remove_files = is_remove_data
 
     async def get_head_data(self, filepath: str):
         with open(filepath, "r") as file:
@@ -28,23 +29,23 @@ class BaseFormatter():
         from shutil import rmtree
         rmtree(os.path.join(self.base_path, data_dir))
 
-    async def save_to_md(self, md_list: List[str], remove_files: bool = True):
+    async def save_to_md(self, md_list: List[str]):
         save_path = os.path.join(self.base_path, "mds")
         os.makedirs(save_path, exist_ok=True)
 
         for filename, md_data in md_list:
-            save_path = os.path.join(save_path, f"{filename}.md")
+            file_save_path = os.path.join(save_path, f"{filename}.md")
 
-            with open(save_path, "a", encoding="utf-8") as md_file:
+            with open(file_save_path, "a", encoding="utf-8") as md_file:
                 md_file.write(md_data)
 
-        if remove_files:
+        if self.is_remove_files:
             await self.remove_additional_data("add_data")
 
 
 class SpellsFormatter(BaseFormatter):
-    def __init__(self, base_path: str) -> None:
-        super().__init__(base_path)
+    def __init__(self, base_path: str, is_remove_data: bool) -> None:
+        super().__init__(base_path, is_remove_data)
         self.base_path = os.path.join(self.base_path, "spells")
 
     async def get_yaml_head(self, filespath: str) -> Dict:
@@ -54,16 +55,16 @@ class SpellsFormatter(BaseFormatter):
         md_title_en = head_data["title_en"].replace(r"\/", " ")
 
         md_classes = [
-            FILTERID_TO_CLASS[i]
+            FILTERID_TO_CLASS[int(i)]
             for i in
             head_data["filter_class"] + head_data["filter_class_tce"]]
 
         md_source = [
-            FILTERID_TO_SOURCE[i]
+            FILTERID_TO_SOURCE[int(i)]
             for i in head_data["filter_source"]]
 
         md_archetypes = [
-            FILTERID_TO_ARCHETYPE[i]
+            FILTERID_TO_ARCHETYPE[int(i)]
             for i in head_data["filter_archetype"]]
 
         return {
@@ -87,6 +88,7 @@ class SpellsFormatter(BaseFormatter):
 
     async def get_md_body(self, filespath: str) -> str:
         body_data = await self.get_body_data(f"{filespath}.html")
+
         params_ul = BeautifulSoup(body_data, "lxml").find(
             "ul", class_="params").findAll("li")
 

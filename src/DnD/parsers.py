@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -56,7 +56,8 @@ class SpellsParser(BaseParser):
 
         return json_data
 
-    async def get_spell_info(self, card: Dict[str, Union[str, List[Union[int, str]]]]) -> Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]:
+    async def get_spell_info(
+            self, card: Dict[Any, Any]) -> Tuple[Dict[Any, Any], str]:
 
         card_link = "https://dnd.su" + str(card["link"].replace("\\", ""))
         card_html = await self.get_page_html(page_url=card_link)
@@ -66,11 +67,11 @@ class SpellsParser(BaseParser):
                 f"Can't scrap spell - {card_link}")
             return (card, SPELL_HTML_CONST)
 
+        self.logger.info(f"{card_link} --- DONE")
         return (card, card_html)
 
-    async def get_spells_info(self,
-                              data: Dict[str, str]) -> \
-            List[Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]]:
+    async def get_spells_info(
+            self, data: Dict[str, str]) -> List[Tuple[Dict[Any, Any], str]]:
 
         semaphore = asyncio.Semaphore(self.max_concurence)
         tasks = asyncio.Queue()
@@ -94,17 +95,16 @@ class SpellsParser(BaseParser):
         return combined_data_list
 
     async def save_json_html_data(
-            self,
-            combined_data_list: List[
-                Tuple[Dict[str, Union[str, List[Union[int, str]]]], str]]):
+        self,
+            combined_data_list: List[Tuple[Dict[Any, Any], str]]) -> None:
 
         os.makedirs(self.base_path, exist_ok=True)
 
         for i, spell in enumerate(combined_data_list):
             spell_path = os.path.join(self.base_path, str(i))
 
-            with open(f"{spell_path}.json", 'w') as file:
+            with open(f"{spell_path}.json", 'w', encoding="utf-8") as file:
                 json.dump(spell[0], file, indent=4)
 
-            with open(f"{spell_path}.html", "wb") as file:
+            with open(f"{spell_path}.html", "w", encoding="utf-8") as file:
                 file.write(spell[1])

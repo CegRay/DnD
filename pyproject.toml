@@ -53,5 +53,5 @@ lint = [
 "Bug Tracker" = "https://github.com/CegRay/DnD/issues"
 
 [project.scripts]
-run = "DnD.cli:cli"
-dev = "DnD.cli:dev"
+scrap = "DnD.cli:cli_scrap"
+save = "DnD.cli:cli_save"
