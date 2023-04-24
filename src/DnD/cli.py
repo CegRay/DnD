@@ -33,12 +33,12 @@ async def run_scrap(config: Config):
 async def run_format(config: Config):
     logger.info("Starting formatters")
 
-    # await format_catalogs(
-    #     SpellsFormatter(config.base_path, config.is_remove_files), "spells")
-    # await format_catalogs(
-    #     ItemsFormatter(config.base_path, config.is_remove_files), "items")
-    # await format_catalogs(
-    #     BestiaryFormatter(config.base_path, config.is_remove_files), "bestiary")  # noqa: E501
+    await format_catalogs(
+        SpellsFormatter(config.base_path, config.is_remove_files), "spells")
+    await format_catalogs(
+        ItemsFormatter(config.base_path, config.is_remove_files), "items")
+    await format_catalogs(
+        BestiaryFormatter(config.base_path, config.is_remove_files), "bestiary")  # noqa: E501
     await format_catalogs(
         FeatsFormatter(config.base_path, config.is_remove_files), "feats")
 

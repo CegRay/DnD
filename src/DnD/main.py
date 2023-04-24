@@ -1,8 +1,8 @@
 import logging
 from typing import Union
 
-from DnD.formatters import (
-    BestiaryFormatter, FeatsFormatter, ItemsFormatter, SpellsFormatter)
+from DnD.formatters import (BestiaryFormatter, FeatsFormatter,
+                            ItemsFormatter, SpellsFormatter)
 from DnD.parsers import (BestiaryParser, FeatsParser,
                          ItemsParser, SpellsParser)
 

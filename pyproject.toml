@@ -7,7 +7,7 @@ package-dir = { "" = "src" }
 
 [project]
 name = "DnD"
-version = "0.0.1"
+version = "0.0.3"
 authors = [
     { name = "CegRay"},
 ]
@@ -21,7 +21,8 @@ classifiers = [
 dependencies = [
     "aiohttp==3.8.*",
     "beautifulsoup4==4.12.*",
-    "PyYaml==6.*"
+    "PyYaml==6.*",
+    "markdownify==0.11.*"
 ]
 [project.optional-dependencies]
 dev = [

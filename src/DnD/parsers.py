@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup
+
 from DnD.config import Config
 from DnD.consts import (BESTIARY_HTML_CONST, FEATS_HTML_CONST,
                         ITEM_HTML_CONST, SPELL_HTML_CONST)
@@ -21,10 +22,13 @@ class BaseParser():
         self.base_path = os.path.join(os.getcwd(), config.base_path)
 
         self.aiohttp_session = aiohttp.ClientSession(headers=config.headers)
+
         if config.proxy:
             from fp.fp import FreeProxy
             self.proxy = FreeProxy(timeout=1, https=True).get(
                 repeat=True)
+        else:
+            self.proxy = None
 
     async def get_page_html(self, page_url: str) -> Optional[str]:
         try:

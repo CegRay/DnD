@@ -7,8 +7,12 @@ from typing import Any, Dict, List
 
 
 from bs4 import BeautifulSoup
-from DnD.consts import (FILTERID_TO_ARCHETYPE, FILTERID_TO_CLASS,
-                        FILTERID_TO_QUALITY, FILTERID_TO_SET,
+from DnD.consts import (FILTER_TO_ABILITY, FILTER_TO_ALINGMENT,
+                        FILTER_TO_OTHER, FILTER_TO_PROFIENCY,
+                        FILTER_TO_REQUIRE, FILTER_TO_SKILL,
+                        FILTERID_TO_ARCHETYPE, FILTERID_TO_CLASS,
+                        FILTERID_TO_LANGUAGE, FILTERID_TO_QUALITY,
+                        FILTERID_TO_SET, FILTERID_TO_SIZE,
                         FILTERID_TO_SOURCE, FILTERID_TO_TYPE)
 from DnD.utils import Dumper
 import markdownify
@@ -54,6 +58,16 @@ class BaseFormatter():
                       default_flow_style=False, Dumper=Dumper)
             md_file.write("---")
 
+    async def get_formatted_stats(self, stat_li: Any) -> str:
+        # Make table with 2 rows os stats
+        stat_row_1, stat_row_2 = "", ""
+        for stat in stat_li.find_all("div", class_="stat", recursive=False):
+            divs = stat.find_all("div", recursive=False)
+            stat_row_1 += f"<td>{divs[0]}</td>"
+            stat_row_2 += f"<td>{divs[1]}</td>"
+
+        return f"<table><tr>{stat_row_1}</tr><tr>{stat_row_2}</tr></table>"
+
     async def get_formatted_body_data(self, body_data: bytes):
         md_name = "# " + \
             BeautifulSoup(body_data, "lxml").find(itemprop="url").text
@@ -62,26 +76,26 @@ class BaseFormatter():
             "ul", class_="params").find_all(recursive=False))
 
         formatted_str = ""
-        for i in params_lis[:-1]:
-            # Replace li tags for more beautiful syntax in md
-            subbed_str = re.sub(r"<li.*?>(.*?)<\/li>",
-                                r"\1<br/>", str(i))
+        for li in params_lis:
+            if li.get("class") == ["stats"]:
+                subbed_str = await self.get_formatted_stats(li)
+
+            elif li.get("class") == ["subsection", "desc"]:
+                description = li.find("div", recursive=False)
+
+                # Replace all \n and \r in td tags before closing td tag
+                subbed_str = re.sub(
+                    r'(?<=<td>)(.*?)(?:\r\n|\n|\r)(?=.*?</td>)',
+                    lambda match: match.group(1).replace(
+                        '\n', ' ').replace('\r', ' '),
+                    "\n" + str(description))
+
+            else:
+                # Replace li tags for more beautiful syntax in md
+                subbed_str = re.sub(r"<li.*?>(.*?)<\/li>",
+                                    r"\1<br/>", str(li))
+
             formatted_str += markdownify.markdownify(subbed_str)
-
-        # Replace li description tag for more beautiful syntax in md
-        description_md = re.sub(
-            r'<li\b[^>]*>([\s\S]*?)<\/li>', r"\n\1", str(params_lis[-1]))
-
-        # Replace all \n and \r in td tags before closing td tag
-        description_md = re.sub(
-            r'(?<=<td>)(.*?)(?:\r\n|\n|\r)(?=.*?</td>)',
-            lambda match: match.group(1).replace('\n', ' ').replace('\r', ' '),
-            str(description_md))
-
-        with open("test.html", "a", encoding="utf-8") as f:
-            f.write(str(description_md))
-
-        formatted_str += markdownify.markdownify(description_md)
 
         return f"\n\n{md_name}\n\n{formatted_str}"
 
@@ -98,6 +112,7 @@ class BaseFormatter():
 
         for filepath in glob.glob(os.path.join(
                 self.base_path, "add_data", "*.html")):
+
             filespath = filepath.split(".")[0]
             filename = os.path.basename(filespath)
 
@@ -193,11 +208,32 @@ class BestiaryFormatter(BaseFormatter):
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
         head_data = await self.get_head_data(f"{filespath}.json")
 
+        md_size = [
+            FILTERID_TO_SIZE[int(i)]
+            for i in head_data["size"]]
+
+        md_type = [
+            FILTERID_TO_TYPE[int(i)]
+            for i in head_data["type"]]
+
+        md_alignment = [
+            FILTER_TO_ALINGMENT[i]
+            for i in head_data["alignment"]]
+
+        md_language = [
+            FILTERID_TO_LANGUAGE[int(i)]
+            for i in head_data["languages"]]
+
+        md_source = [
+            FILTERID_TO_SOURCE[int(i)]
+            for i in head_data["source"]]
+
         return {
-            "item_type": "Bestiary",
-            "item_quality": "md_quality",
-            "item_set": "md_set",
-            "item_source": "md_source"}
+            "bestiary_size": md_size,
+            "bestiary_type": md_type,
+            "bestiary_alignment": md_alignment,
+            "bestiary_language": md_language,
+            "bestiary_source": md_source}
 
 
 class FeatsFormatter(BaseFormatter):
@@ -208,8 +244,36 @@ class FeatsFormatter(BaseFormatter):
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
         head_data = await self.get_head_data(f"{filespath}.json")
 
+        md_source = [
+            FILTERID_TO_SOURCE[int(i)]
+            for i in head_data["source"]]
+
+        md_abilities = [
+            FILTER_TO_ABILITY[i]
+            for i in head_data["abilities"]]
+
+        md_proficiency = [
+            FILTER_TO_PROFIENCY[i]
+            for i in head_data["proficiency"]]
+
+        md_requires = [
+            FILTER_TO_REQUIRE[i]
+            for i in head_data["requires"]]
+
+        md_skills = [
+            FILTER_TO_SKILL[i]
+            for i in head_data["skills"]]
+
+        md_other = [
+            FILTER_TO_OTHER[i]
+            for i in head_data["other"]]
+
         return {
-            "item_type": "Feats",
-            "item_quality": "md_quality",
-            "item_set": "md_set",
-            "item_source": "md_source"}
+            "feat_source": md_source,
+            "feat_abilities": md_abilities,
+            "feat_proficiency": md_proficiency,
+            "feat_requires": md_requires,
+            "feat_skills": md_skills,
+            "feat_other": md_other,
+
+        }
