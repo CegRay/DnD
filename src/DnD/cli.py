@@ -5,9 +5,11 @@ from typing import Any, Coroutine
 
 
 from DnD.config import Config, load_config
-from DnD.formatters import SpellsFormatter
-from DnD.main import (format_spells, scrap_spells)
-from DnD.parsers import SpellsParser
+from DnD.formatters import (
+    BestiaryFormatter, FeatsFormatter, ItemsFormatter, SpellsFormatter)
+from DnD.main import (format_catalogs, scrap_catalogs)
+from DnD.parsers import (BestiaryParser, FeatsParser,
+                         ItemsParser, SpellsParser)
 
 
 logger = logging.getLogger("main")
@@ -16,7 +18,14 @@ logger = logging.getLogger("main")
 async def run_scrap(config: Config):
     logger.info("Starting parsers")
 
-    await scrap_spells(SpellsParser(config))
+    await scrap_catalogs(SpellsParser(config),
+                         "spells", "https://dnd.su/spells/")
+    await scrap_catalogs(ItemsParser(config),
+                         "items", "https://dnd.su/items/")
+    await scrap_catalogs(BestiaryParser(config),
+                         "bestiary", "https://dnd.su/bestiary/")
+    await scrap_catalogs(FeatsParser(config),
+                         "feats", "https://dnd.su/feats/")
 
     logger.info("Parsers have done their work")
 
@@ -24,8 +33,14 @@ async def run_scrap(config: Config):
 async def run_format(config: Config):
     logger.info("Starting formatters")
 
-    await format_spells(SpellsFormatter(
-        config.base_path, config.is_remove_files))
+    # await format_catalogs(
+    #     SpellsFormatter(config.base_path, config.is_remove_files), "spells")
+    # await format_catalogs(
+    #     ItemsFormatter(config.base_path, config.is_remove_files), "items")
+    # await format_catalogs(
+    #     BestiaryFormatter(config.base_path, config.is_remove_files), "bestiary")  # noqa: E501
+    await format_catalogs(
+        FeatsFormatter(config.base_path, config.is_remove_files), "feats")
 
     logger.info("Formatters have done their work")
 

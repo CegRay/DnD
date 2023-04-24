@@ -1,7 +1,25 @@
 FILTERID_TO_CLASS = {
     12: "Бард", 13: "Жрец", 16: "Паладин", 17: "Следопыт",
     19: "Чародей", 20: "Колдун", 21: "Волшебник", 22: "Друид",
-    23: "Изобретатель"}
+    23: "Изобретатель",
+}
+
+FILTERID_TO_TYPE = {
+    1: "Чудесный предмет", 2: "Зелье", 3: "Кольцо",
+    4: "Свиток", 5: "Волшебная палочка", 6: "Жезл",
+    7: "Посох", 8: "Доспех", 9: "Оружие",
+}
+
+FILTERID_TO_QUALITY = {
+    1: "Необычный", 2: "Редкий", 3: "Очень редкий",
+    4: "Легендарный", 5: "Редкость варьируется",
+    6: "Обычный", 7: "Артефакт", 8: "Не имеет редкости",
+}
+
+FILTERID_TO_SET = {
+    1: "Не требуется настройка", 2: "Требуется настройка",
+}
+
 FILTERID_TO_ARCHETYPE = {
     107: {"class": "Бард", "archetype": "Коллегия духов"},
     135: {"class": "Волшебник", "archetype": "Магия хронургии"},
@@ -64,34 +82,105 @@ FILTERID_TO_ARCHETYPE = {
 }
 
 FILTERID_TO_SOURCE = {
+    101: "Dungeon master's guide",
     102: "Player's handbook",
+    105: "Hoard of the Dragon Queen",
+    106: "The Rise of Tiamat",
     107: "Princes of the Apocalypse",
     108: "Sword Coast Adventurer's Guide",
     109: "Xanathar's Guide to Everything",
+    110: "Lost Mine of Phandelver",
+    111: "Volo's guide to monsters",
     112: "Guildmasters' guide to Ravnica",
+    113: "Mordenkainen's Tome of Foes",
+    114: "Tomb of Annihilation",
     115: "Acquisition Incorporated",
     116: "Explorer's Guide to Wildemount",
     117: "Tasha's Cauldron of Everything",
+    119: "Eberron: Rising from the Last War",
     120: "Icewind Dale: Rime of the Frostmaiden",
+    121: "Mythic Odysseys of Theros",
+    122: "Candlekeep Mysteries",
+    123: "Hunt for the Thessalhydra",
+    124: "Curse of Strahd",
+    125: "Van Richten's Guide to Ravenloft",
+    126: "Baldur's Gate: Descent Into Avernus",
+    127: "Essentials Kit: Divine Contention",
+    128: "Ghosts of Saltmarsh",
+    129: "Out of the Abyss",
+    130: "The Lost Dungeon of Rickedness: Big Rick Energy",
+    131: "Essentials Kit: Sleeping Dragon's Wake",
+    132: "Storm King's Thunder",
+    133: "Tales from the Yawning Portal",
+    134: "Waterdeep: Dragon Heist",
+    135: "Waterdeep: Dungeon of the Mad Mage",
+    151: "The Wild Beyond The Witchlight: A Feywild Adventure",
     152: "Fizban's Treasury of Dragons",
     153: "Lost Laboratory of Kwalish",
     155: "Strixhaven: A Curriculum of Chaos",
+    159: "Critical Role: Call of the Netherdeep",
     160: "Spelljammer: Adventures in Space",
+    161: "Infernal Machine Rebuild",
+    171: "Journeys through the Radiant Citadel",
+    180: "Saltmarsh Encounters",
+    183: "Dragonlance: Shadow of the Dragon Queen",
+    188: "Monstrous Compendium Vol 2: Dragonlance Creatures",
+    189: "Keys from the Golden Vault",
+    191: "Honor among Thieves",
 
 }
 
 
 SPELL_HTML_CONST = '''
-<a href="/spells/4-aura_of_life/" itemprop="url" class="item-link">NONE</a>
+<a href="" itemprop="url" class="item-link">NONE</a>
 
 <ul class="params">
     <li class="size-type-alignment">NONE</li>
-    <li><strong>Время накладывания:</strong>NONE</li>
-    <li><strong>Дистанция:</strong>NONE</li>
-    <li><strong>Компоненты:</strong>NONE</li>
-    <li><strong>Длительность:</strong>NONE</li>
-    <li><strong>Классы:</strong>NONE</li>
-    <li><strong>Архетипы:</strong>NONE</li>
+    <li><strong>Время накладывания: </strong>NONE</li>
+    <li><strong>Дистанция:</strong> NONE</li>
+    <li><strong>Компоненты:</strong> NONE</li>
+    <li><strong>Длительность:</strong> NONE</li>
+    <li><strong>Классы:</strong> NONE</li>
+    <li><strong>Архетипы:</strong> NONE</li>
+    <li><strong>Источник:</strong> NONE</li>
+    <li class="subsection desc">
+        <div itemprop="description">
+            <p>NONE</p>
+        </div>
+    </li>
+</ul>'''
+
+ITEM_HTML_CONST = '''
+<a href="" itemprop="url" class="item-link">NONE</a>
+
+<ul class="params">
+    <li class="size-type-alignment">NONE</li>
+    <li><strong>Источник:</strong> NONE</li>
+    <li class="subsection desc">
+        <div itemprop="description">
+            <p>NONE</p>
+        </div>
+    </li>
+</ul>'''
+
+BESTIARY_HTML_CONST = '''
+<a href="" itemprop="url" class="item-link">NONE</a>
+
+<ul class="params">
+    <li class="size-type-alignment">NONE</li>
+    <li><strong>Источник:</strong> NONE</li>
+    <li class="subsection desc">
+        <div itemprop="description">
+            <p>NONE</p>
+        </div>
+    </li>
+</ul>'''
+
+FEATS_HTML_CONST = '''
+<a href="" itemprop="url" class="item-link">NONE</a>
+
+<ul class="params">
+    <li class="size-type-alignment">NONE</li>
     <li><strong>Источник:</strong> NONE</li>
     <li class="subsection desc">
         <div itemprop="description">
