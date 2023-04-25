@@ -18,9 +18,9 @@ def load_config(path: str):
 
     return Config(
         headers={**config["headers"]},
-        proxy=config["parser"].getboolean("is_proxy"),
+        proxy=config["parser"].getboolean("is-proxy"),
         max_concurence=config["parser"].getint("max-concurence"),
         base_path=config["main"].get("base-path"),
         is_remove_files=config["formatter"].getboolean(
-            "is_remove_additional_files"),
+            "is-remove-additional-files"),
     )
