@@ -15,7 +15,7 @@ async def scrap_catalogs(parser: Union[SpellsParser, ItemsParser,
     logger = logging.getLogger(f"{catalog_name.capitalize()} parser")
     logger.info(f"Start {catalog_name} parsing")
 
-    html = await parser.get_page_html(page_url=catalog_url)
+    html = await parser.try_n_times(parser.get_page_html, page_url=catalog_url)
     if not html:
         await parser.aiohttp_session.close()
         logger.error(f"Can't scrap {catalog_name} - no HTML")
@@ -27,7 +27,7 @@ async def scrap_catalogs(parser: Union[SpellsParser, ItemsParser,
     await parser.save_json_html_data(detailed_data_list)
     await parser.aiohttp_session.close()
 
-    logger.info(f"{catalog_name.capitalize()} parsing DONE")
+    logger.info(f"{catalog_name.capitalize()} parsing --- DONE")
 
 
 async def format_catalogs(formatter: Union[SpellsFormatter, ItemsFormatter,
@@ -40,4 +40,4 @@ async def format_catalogs(formatter: Union[SpellsFormatter, ItemsFormatter,
     md_data_list = await formatter.create_md_data_list()
     await formatter.save_to_md(md_data_list)
 
-    logger.info(f"{catalog_name.capitalize()} formatting DONE")
+    logger.info(f"{catalog_name.capitalize()} formatting --- DONE")

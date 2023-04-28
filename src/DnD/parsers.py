@@ -3,22 +3,22 @@ import json
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Coroutine, Dict, List, Optional, Tuple
 
 import aiohttp
 from bs4 import BeautifulSoup
-
-from DnD.config import Config
+from DnD.config import Parser
 from DnD.consts import (BESTIARY_HTML_CONST, FEATS_HTML_CONST,
                         ITEM_HTML_CONST, SPELL_HTML_CONST)
 
 
 class BaseParser():
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Parser) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.HTML_CONST = ""
 
         self.max_concurence = config.max_concurence
+        self.max_retries = config.max_retries
         self.base_path = os.path.join(os.getcwd(), config.base_path)
 
         self.aiohttp_session = aiohttp.ClientSession(headers=config.headers)
@@ -41,9 +41,20 @@ class BaseParser():
                     return await response.text()
                 return None
 
-        except aiohttp.ClientError as ex:
-            self.logger.error(f"Page request {page_url}:\n {ex}")
+        except aiohttp.ClientError:
             return None
+
+    async def try_n_times(self,
+                          func: Coroutine[Any, Any, Any],
+                          *args: Any, **kwargs: Any) -> Any:
+
+        for _ in range(self.max_retries):
+            response = await func(*args, **kwargs)  # type: ignore
+
+            if response is not None:
+                return response                     # type: ignore
+
+        return None
 
     async def scrap_main_page_info(self, html: str) -> Dict[str, str]:
         soup = BeautifulSoup(html, "lxml")
@@ -69,14 +80,15 @@ class BaseParser():
             self, card: Dict[Any, Any]) -> Tuple[Dict[Any, Any], str]:
 
         card_link = "https://dnd.su" + str(card["link"].replace("\\", ""))
-        card_html = await self.get_page_html(page_url=card_link)
+        card_html = await self.try_n_times(self.get_page_html,
+                                           page_url=card_link)
 
         if not card_html:
-            self.logger.info(
+            self.logger.warn(
                 f"Can't scrap card - {card_link}")
             return (card, self.HTML_CONST)
 
-        self.logger.info(f"{card_link} --- DONE")
+        self.logger.debug(f"{card_link} --- DONE")
         return (card, card_html)
 
     async def get_cards_info(
@@ -120,7 +132,7 @@ class BaseParser():
 
 
 class SpellsParser(BaseParser):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Parser) -> None:
         super().__init__(config)
         self.base_path = os.path.join(self.base_path, "spells", "add_data")
         self.HTML_CONST = SPELL_HTML_CONST
@@ -163,21 +175,21 @@ class SpellsParser(BaseParser):
 
 
 class ItemsParser(BaseParser):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Parser) -> None:
         super().__init__(config)
         self.base_path = os.path.join(self.base_path, "items", "add_data")
         self.HTML_CONST = ITEM_HTML_CONST
 
 
 class BestiaryParser(BaseParser):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Parser) -> None:
         super().__init__(config)
         self.base_path = os.path.join(self.base_path, "bestiary", "add_data")
         self.HTML_CONST = BESTIARY_HTML_CONST
 
 
 class FeatsParser(BaseParser):
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Parser) -> None:
         super().__init__(config)
         self.base_path = os.path.join(self.base_path, "feats", "add_data")
         self.HTML_CONST = FEATS_HTML_CONST

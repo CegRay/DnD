@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 
 from bs4 import BeautifulSoup
+from DnD.config import Formatter
 from DnD.consts import (FILTER_TO_ABILITY, FILTER_TO_ALINGMENT,
                         FILTER_TO_OTHER, FILTER_TO_PROFIENCY,
                         FILTER_TO_REQUIRE, FILTER_TO_SKILL,
@@ -20,10 +21,10 @@ import yaml
 
 
 class BaseFormatter():
-    def __init__(self, base_path: str, is_remove_data: bool) -> None:
+    def __init__(self, config: Formatter) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.base_path = os.path.join(os.getcwd(), base_path)
-        self.is_remove_files = is_remove_data
+        self.base_path = os.path.join(os.getcwd(), config.base_path)
+        self.is_remove_files = config.is_remove_files
 
     async def get_head_data(self, filepath: str):
         with open(filepath, "r") as file:
@@ -119,6 +120,7 @@ class BaseFormatter():
             await self.save_yaml_head(filespath, filename)
 
             md_data_list.append((filename, await self.get_md_body(filespath)))
+            self.logger.debug(f"{filename} --- ADDED")
 
         return md_data_list
 
@@ -136,8 +138,8 @@ class BaseFormatter():
 
 
 class SpellsFormatter(BaseFormatter):
-    def __init__(self, base_path: str, is_remove_data: bool) -> None:
-        super().__init__(base_path, is_remove_data)
+    def __init__(self, config: Formatter) -> None:
+        super().__init__(config)
         self.base_path = os.path.join(self.base_path, "spells")
 
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
@@ -162,7 +164,7 @@ class SpellsFormatter(BaseFormatter):
         return {
             "name": md_title,
             "name_en": md_title_en,
-            "level": int(head_data["level"]),
+            "level": head_data["level"],
             "spell_school": head_data["school"],
             "spell_classes": md_classes,
             "spell_archetypes": md_archetypes,
@@ -170,8 +172,8 @@ class SpellsFormatter(BaseFormatter):
 
 
 class ItemsFormatter(BaseFormatter):
-    def __init__(self, base_path: str, is_remove_data: bool) -> None:
-        super().__init__(base_path, is_remove_data)
+    def __init__(self, config: Formatter) -> None:
+        super().__init__(config)
         self.base_path = os.path.join(self.base_path, "items")
 
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
@@ -201,8 +203,8 @@ class ItemsFormatter(BaseFormatter):
 
 
 class BestiaryFormatter(BaseFormatter):
-    def __init__(self, base_path: str, is_remove_data: bool) -> None:
-        super().__init__(base_path, is_remove_data)
+    def __init__(self, config: Formatter) -> None:
+        super().__init__(config)
         self.base_path = os.path.join(self.base_path, "bestiary")
 
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
@@ -220,9 +222,19 @@ class BestiaryFormatter(BaseFormatter):
             FILTER_TO_ALINGMENT[i]
             for i in head_data["alignment"]]
 
-        md_language = [
-            FILTERID_TO_LANGUAGE[int(i)]
-            for i in head_data["languages"]]
+        md_language = []
+        # Some languages are "", some have id~distance~comment syntax
+        for language in head_data["languages"]:
+            if language == "":
+                continue
+
+            try:
+                md_language.append(FILTERID_TO_LANGUAGE[int(language)])
+            except ValueError:
+                # 1 language have just comment without ~
+                if "~" in language:
+                    md_language.append(
+                        FILTERID_TO_LANGUAGE[int(language.split("~")[0])])
 
         md_source = [
             FILTERID_TO_SOURCE[int(i)]
@@ -237,8 +249,8 @@ class BestiaryFormatter(BaseFormatter):
 
 
 class FeatsFormatter(BaseFormatter):
-    def __init__(self, base_path: str, is_remove_data: bool) -> None:
-        super().__init__(base_path, is_remove_data)
+    def __init__(self, config: Formatter) -> None:
+        super().__init__(config)
         self.base_path = os.path.join(self.base_path, "feats")
 
     async def get_yaml_head(self, filespath: str) -> Dict[str, Any]:
