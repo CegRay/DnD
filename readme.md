@@ -49,6 +49,7 @@ pip install -e .[test,lint]
 -   _base-path_ - basic directory for .md and additional files
 -   _is-proxy_ - Bool flag to use/not use proxy
 -   _max-concurence_ - The number of workers that will competitively gather information
+-   _max-retries_ - The number of retry to get page content
 -   _is-remove-additional-files_ - Bool flag to remove/not remove additional files after formatting
 -   _[headers]_ - Browser headers
 
